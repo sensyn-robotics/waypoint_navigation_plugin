@@ -60,6 +60,8 @@ namespace waypoint_nav_plugin
 
 struct MissionKeywords {
   inline static const std::string kPosition = "position";
+  inline static const std::string kPose = "pose";
+
 };
 
 WaypointFrame::WaypointFrame(rviz::DisplayContext *context, std::map<int, Ogre::SceneNode* >* map_ptr, interactive_markers::InteractiveMarkerServer* server, int* unique_ind, QWidget *parent, WaypointNavTool* wp_tool)
@@ -119,7 +121,7 @@ void WaypointFrame::disable()
 void WaypointFrame::saveButtonClicked() 
 {
   QString filename =
-      QFileDialog::getSaveFileName(0, tr("Save Mission"), "waypoints",
+      QFileDialog::getSaveFileName(0, tr("Save Mission"), "waypoints.yaml",
                                    tr("Mission Files (*.bag *.yaml *.json)"));
 
   if (filename.isEmpty()) {
@@ -185,13 +187,21 @@ void WaypointFrame::saveToYaml(const std::string &filename) {
   out << YAML::BeginSeq;
   for (sn_it = sn_map_ptr_->begin(); sn_it != sn_map_ptr_->end(); ++sn_it) {
     const Ogre::Vector3 position = sn_it->second->getPosition();
+    const Ogre::Quaternion quat = sn_it->second->getOrientation();
+
+
+      tf::Quaternion q(quat.x,quat.y,quat.z,quat.w);
+      tf::Matrix3x3 m(q);
+      double roll, pitch, yaw;
+      m.getRPY(roll, pitch, yaw);
+
 
     out << YAML::BeginMap;
-    out << YAML::Key << MissionKeywords::kPosition;
+    out << YAML::Key << MissionKeywords::kPose;
     out << YAML::Value;
     out << YAML::Flow;
     out << YAML::BeginSeq;
-    out << position.x << position.y << position.z;
+    out << position.x << position.y << position.z << roll << pitch << yaw ;
     out << YAML::EndSeq;
     out << YAML::EndMap;
   }
@@ -285,6 +295,11 @@ void WaypointFrame::loadFromYaml(const std::string &filename) {
         ROS_WARN_STREAM("add waypoint whose x y z are: " << position.x << ", "
                                                          << position.y << ", "
                                                          << position.z);
+
+          tf2::Quaternion q;
+          q.setRPY(pos_node[3].as<double>(),pos_node[4].as<double>(),pos_node[5].as<double>());
+          q=q.normalize();
+
         Ogre::Quaternion quat;
         wp_nav_tool_->makeIm(position, quat,
                              ui_->sixDcheckBox->checkState() == Qt::Checked);
