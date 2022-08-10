@@ -285,7 +285,7 @@ void WaypointFrame::loadFromYaml(const std::string &filename) {
     for (auto it_map = wpt_node.begin(); it_map != wpt_node.end(); ++it_map) {
       // Do stuff depends on the key
       const std::string key = it_map->first.as<std::string>();
-      if (key == MissionKeywords::kPosition) {
+      if (key == MissionKeywords::kPose) {
         YAML::Node pos_node = it_map->second;
 
         Ogre::Vector3 position;
@@ -301,6 +301,11 @@ void WaypointFrame::loadFromYaml(const std::string &filename) {
           q=q.normalize();
 
         Ogre::Quaternion quat;
+        quat.x = q.x();
+        quat.y = q.y();
+        quat.z = q.z();
+        quat.w = q.w();
+
         wp_nav_tool_->makeIm(position, quat,
                              ui_->sixDcheckBox->checkState() == Qt::Checked);
       }

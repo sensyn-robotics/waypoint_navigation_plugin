@@ -74,6 +74,7 @@ public:
   virtual void save(rviz::Config config) const;
   void makeIm(const Ogre::Vector3& position, const Ogre::Quaternion& quat,
               bool full_dof = false);
+    void modeCb( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
 
 private:
   void processFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback);
